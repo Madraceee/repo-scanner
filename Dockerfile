@@ -7,6 +7,6 @@ COPY src ./src
 RUN /app/gradlew build
 
 FROM eclipse-temurin:21-jre-alpine
-WORKDIR /app
+WORKDIR /github/workspace
 COPY --from=builder /app/build/libs/analyzer-0.0.1-SNAPSHOT.jar app.jar
 ENTRYPOINT ["java", "-jar", "app.jar"]
