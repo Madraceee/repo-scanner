@@ -1,0 +1,19 @@
+name: 'Impact Analyzer'
+description: 'Detects changes in schema and notifies subscribed users'
+inputs:
+  commit-sha:
+    description: 'The commit SHA that triggered the action'
+    required: true
+  repo-url:
+    description: 'The repo URL'
+    required: true
+  server-url:
+    description: 'The repo URL'
+    required: true
+runs:
+  using: 'docker'
+  image: 'Dockerfile'  
+  args:
+    - ${{ inputs.commit-sha }}
+    - ${{ inputs.repo-url }}
+    - ${{ inputs.server-url }}
