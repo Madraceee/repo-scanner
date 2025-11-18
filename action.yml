@@ -7,6 +7,9 @@ inputs:
   repo-url:
     description: 'The repo URL'
     required: true
+  tag-name:
+    description: 'Tag Name of release'
+    required: true
   server-url:
     description: 'The repo URL'
     required: true
