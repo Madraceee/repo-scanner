@@ -39,18 +39,20 @@ public class AnalyzerService implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		if (args.length < 2) {
-			System.err.println("Error: Missing required arguments (SHA, URL).");
+		if (args.length < 3) {
+			System.err.println("Error: Missing required arguments (SHA, URL, TAG NAME).");
 			System.exit(1);
 		}
 
 		String repoUrl = args[0];
 		String commitSha = args[1]; 
-		String serverUrl = args[2];
+		String tagName = args[2]
+		String serverUrl = args[3];
                 
                 System.out.println("--- Received GitHub Context ---");
                 System.out.println("Commit SHA: " + commitSha);
                 System.out.println("Repo URL: " + repoUrl);
+                System.out.println("Tag Name: " + tagName);
                 System.out.println("-----------------------------");
 
 
@@ -60,6 +62,7 @@ public class AnalyzerService implements CommandLineRunner {
 			JsonObject jsonObject = new JsonObject();
 			jsonObject.addProperty("repo_url", repoUrl);
 			jsonObject.addProperty("commit", commitSha);
+			jsonObject.addProperty("tag_name", tagName);
 
 			Gson gson = new Gson();
 			jsonObject.add("data", gson.toJsonTree(data));
