@@ -46,7 +46,7 @@ public class AnalyzerService implements CommandLineRunner {
 
 		String repoUrl = args[0];
 		String commitSha = args[1]; 
-		String tagName = args[2]
+		String tagName = args[2];
 		String serverUrl = args[3];
                 
                 System.out.println("--- Received GitHub Context ---");
