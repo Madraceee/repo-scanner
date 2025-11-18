@@ -1,6 +1,6 @@
 package com.hackathon.analyzer;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.github.javaparser.JavaParser;
 import com.github.javaparser.ParserConfiguration;
@@ -11,6 +11,9 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.Parameter;
 import com.github.javaparser.ast.body.RecordDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.google.gson.JsonObject;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
 import java.io.File;
 import java.nio.file.Paths;
@@ -53,9 +56,16 @@ public class AnalyzerService implements CommandLineRunner {
 
 		try{
 			String repoPath = cloneRepo(repoUrl, commitSha);
-			String data = parse(repoPath);
+			List<ControllerMethodInfo>  data = parse(repoPath);
+			JsonObject jsonObject = new JsonObject();
+			jsonObject.addProperty("repo_url", repoUrl);
+			jsonObject.addProperty("commit", commitSha);
+
+			Gson gson = new Gson();
+			jsonObject.add("data", gson.toJsonTree(data));
+			String finalData = gson.toJson(jsonObject);
 			if (!serverUrl.equals("blank")){
-				sendPostRequest(serverUrl, repoUrl, commitSha, data);
+				sendPostRequest(serverUrl,finalData);
 			}
 			System.exit(0);
 		} catch(Exception e) {
@@ -64,7 +74,7 @@ public class AnalyzerService implements CommandLineRunner {
 		} 	
 	}
 
-	public String parse(String repoPath) throws Exception{
+	public List<ControllerMethodInfo>  parse(String repoPath) throws Exception{
 		System.out.println("Parsing " + repoPath);
 		Map<String, Map<String, String>> typeFieldsMap = new HashMap<>();
 		String repoRoot = getSrcFolder(repoPath);
@@ -165,8 +175,7 @@ public class AnalyzerService implements CommandLineRunner {
 			}
 		}
 
-		ObjectMapper mapper = new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-		return mapper.writeValueAsString(controllerInfos);
+		return controllerInfos;
 	}
 
 
@@ -263,28 +272,21 @@ public class AnalyzerService implements CommandLineRunner {
 		return tempRepoDir.toString();
 	}
 
-        public void sendPostRequest(String serverUrl, String repoUrl, String commit, String data)
+        public void sendPostRequest(String serverUrl, String data)
                     throws IOException, InterruptedException {
                 
-                String requestBody = String.format("""
-                    {
-                        "repo_url": "%s",
-                        "commit": "%s",
-                        "data": "%s"
-                    }
-                    """, repoUrl, commit, data);
-
                 HttpClient client = HttpClient.newBuilder().build();
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(serverUrl))
                         .header("Content-Type", "application/json") 
-                        .POST(HttpRequest.BodyPublishers.ofString(requestBody)) 
+                        .POST(HttpRequest.BodyPublishers.ofString(data)) 
                         .build();
         
+		System.out.println("Sending post request: " +  data);
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         
                 System.out.println("✅ POST Request Sent Successfully");
-                System.out.println("Status Code: " + response.statusCode());
-            }
+		System.out.println("Status Code: " + response.statusCode());
+	}   
 }
