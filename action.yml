@@ -19,4 +19,5 @@ runs:
   args:
     - ${{ inputs.repo-url }}
     - ${{ inputs.commit-sha }}
+    - ${{ inputs.tag-name }}
     - ${{ inputs.server-url }}
