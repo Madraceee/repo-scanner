@@ -80,8 +80,7 @@ public class AnalyzerService implements CommandLineRunner {
 	public List<ControllerMethodInfo>  parse(String repoPath) throws Exception{
 		System.out.println("Parsing " + repoPath);
 		Map<String, Map<String, String>> typeFieldsMap = new HashMap<>();
-		String repoRoot = getSrcFolder(repoPath);
-		List<File> javaFiles = Files.walk(new File(repoRoot).toPath())
+		List<File> javaFiles = Files.walk(new File(repoPath).toPath())
 		.filter(p -> p.toString().endsWith(".java"))
 		.map(java.nio.file.Path::toFile)
 		.collect(Collectors.toList());
