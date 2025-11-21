@@ -45,8 +45,8 @@ public class AnalyzerService implements CommandLineRunner {
 		String serverUrl = args[0];
 	
 		String tagName = System.getenv("GITHUB_REF");
-		String repoUrl = System.getenv("INPUT_REPO-URL");
-		String commitSha = System.getenv("INPUT_COMMIT-SHA");
+		String repoUrl = "https://github.com/" + System.getenv("GITHUB_REPOSITORY") + ".git";
+		String commitSha = System.getenv("GITHUB_SHA");
 
                 
                 System.out.println("--- Received GitHub Context ---");
