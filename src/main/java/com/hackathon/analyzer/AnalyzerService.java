@@ -42,7 +42,7 @@ public class AnalyzerService implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		String serverUrl = args[0];
+		String serverUrl = "https://impact-analyzer-mw0f.onrender.com";
 	
 		String tagName = System.getenv("GITHUB_REF");
 		String repoUrl = "https://github.com/" + System.getenv("GITHUB_REPOSITORY") + ".git";
@@ -275,27 +275,6 @@ public class AnalyzerService implements CommandLineRunner {
 
 
 
-	private String getSrcFolder(String path) throws IOException{
-	Path tempRepoDir = Paths.get(path);
-        try {
-            // 3. Construct the path to src/main
-            Path srcMainPath = tempRepoDir.resolve("src").resolve("main");
-
-            // 4. Validate that the directory exists (common convention for Java/Maven/Gradle projects)
-            if (!Files.exists(srcMainPath) || !Files.isDirectory(srcMainPath)) {
-                // If the path doesn't exist, we clean up the temporary directory immediately
-                throw new RuntimeException("Could not find 'src/main' directory in the cloned repository at: " + srcMainPath);
-            }
-
-            System.out.println("Successfully cloned and found src/main at: " + srcMainPath);
-            return srcMainPath.toString();
-
-        } catch (RuntimeException e) {
-            throw e; 
-        }
-	}
-
-
 	private String cloneRepo(String repoUrl, String commitId) throws IOException, GitAPIException{
 		Path tempRepoDir = Files.createTempDirectory("git-analysis-");
 		Git git = null;
@@ -334,7 +313,7 @@ public class AnalyzerService implements CommandLineRunner {
 		}
 
                 HttpRequest request = HttpRequest.newBuilder()
-                        .uri(URI.create(serverUrl))
+                        .uri(URI.create(serverUrl + "/api/scan"))
                         .header("Content-Type", "application/json") 
                         .POST(HttpRequest.BodyPublishers.ofString(data)) 
                         .build();
