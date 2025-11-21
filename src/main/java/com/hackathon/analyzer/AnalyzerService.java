@@ -311,7 +311,7 @@ public class AnalyzerService implements CommandLineRunner {
                 HttpClient client = HttpClient.newBuilder().build();
 		System.out.println("Sending post request: " +  data);
 
-		if (!serverUrl.equals("blank")){
+		if (serverUrl.equals("blank")){
 			return;
 		}
 
