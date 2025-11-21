@@ -7,8 +7,9 @@ inputs:
 runs:
   using: 'docker'
   image: 'Dockerfile'  
+  env:
+    REPO_URL: ${{ github.server_url }}/${{ github.repository }}.git
+    COMMIT_SHA: ${{ github.sha }}
+    REF_NAME: ${{ github.ref }}
   args:
-    - ${{ github.server_url }}/${{ github.repository }}.git
-    - ${{ github.sha }}
-    - ${{ github.ref }}
     - ${{ inputs.server-url }}

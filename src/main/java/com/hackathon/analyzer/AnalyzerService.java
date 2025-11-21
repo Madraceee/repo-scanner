@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.boot.CommandLineRunner;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -40,17 +41,18 @@ import java.net.http.HttpResponse;
 @Service
 public class AnalyzerService implements CommandLineRunner {
 
+	@Value("${REPO_URL}")
+	String repoUrl;
+
+	@Value("${COMMIT_SHA}")
+	String commitSha; 
+
+	@Value("${REF_NAME}")
+	String tagName;
+
 	@Override
 	public void run(String... args) throws Exception {
-		if (args.length < 3) {
-			System.err.println("Error: Missing required arguments (SHA, URL, TAG NAME).");
-			System.exit(1);
-		}
-
-		String repoUrl = args[0];
-		String commitSha = args[1]; 
-		String tagName = args[2];
-		String serverUrl = args[3];
+		String serverUrl = args[1];
                 
                 System.out.println("--- Received GitHub Context ---");
                 System.out.println("Commit SHA: " + commitSha);
