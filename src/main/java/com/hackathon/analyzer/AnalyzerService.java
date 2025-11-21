@@ -42,7 +42,7 @@ public class AnalyzerService implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception {
-		String serverUrl = args[1];
+		String serverUrl = args[0];
 	
 		String tagName = System.getenv("GITHUB_REF");
 		String repoUrl = System.getenv("INPUT_REPO-URL");
