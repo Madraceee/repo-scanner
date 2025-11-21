@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.boot.CommandLineRunner;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.springframework.beans.factory.annotation.Value;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -41,18 +40,14 @@ import java.net.http.HttpResponse;
 @Service
 public class AnalyzerService implements CommandLineRunner {
 
-	@Value("${INPUT_REPO-URL}")
-	String repoUrl;
-
-	@Value("${INPUT_COMMIT-SHA}")
-	String commitSha; 
-
-	@Value("${GITHUB_REF}")
-	String tagName;
-
 	@Override
 	public void run(String... args) throws Exception {
 		String serverUrl = args[1];
+	
+		String tagName = System.getenv("GITHUB_REF");
+		String repoUrl = System.getenv("INPUT_REPO-URL");
+		String commitSha = System.getenv("INPUT_COMMIT-SHA");
+
                 
                 System.out.println("--- Received GitHub Context ---");
                 System.out.println("Commit SHA: " + commitSha);
