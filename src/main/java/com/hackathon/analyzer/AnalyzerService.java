@@ -41,13 +41,13 @@ import java.net.http.HttpResponse;
 @Service
 public class AnalyzerService implements CommandLineRunner {
 
-	@Value("${REPO_URL}")
+	@Value("${INPUT_REPO-URL}")
 	String repoUrl;
 
-	@Value("${COMMIT_SHA}")
+	@Value("${INPUT_COMMIT-SHA}")
 	String commitSha; 
 
-	@Value("${REF_NAME}")
+	@Value("${GITHUB_REF}")
 	String tagName;
 
 	@Override
