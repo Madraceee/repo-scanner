@@ -15,6 +15,9 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
 import com.google.gson.JsonObject;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
+import com.github.javaparser.ast.expr.NormalAnnotationExpr;
+import com.github.javaparser.ast.expr.MemberValuePair;
+import com.github.javaparser.ast.expr.Expression;
 import java.io.File;
 import java.nio.file.Paths;
 import java.nio.file.Files;
@@ -67,9 +70,7 @@ public class AnalyzerService implements CommandLineRunner {
 			Gson gson = new Gson();
 			jsonObject.add("data", gson.toJsonTree(data));
 			String finalData = gson.toJson(jsonObject);
-			if (!serverUrl.equals("blank")){
-				sendPostRequest(serverUrl,finalData);
-			}
+			sendPostRequest(serverUrl,finalData);
 			System.exit(0);
 		} catch(Exception e) {
 			System.out.println(e);
@@ -124,6 +125,7 @@ public class AnalyzerService implements CommandLineRunner {
 					.filter( c -> c.isAnnotationPresent("RestController") || c.isAnnotationPresent("Controller"))
 					.forEach( controller -> {
 						controller.findAll(MethodDeclaration.class).forEach( method -> {
+						Optional<AnnotationExpr> requestMapping = method.getAnnotationByName("RequestMapping");
 						Optional<AnnotationExpr> getMapping = method.getAnnotationByName("GetMapping");
 						Optional<AnnotationExpr> postMapping = method.getAnnotationByName(  "PostMapping");
 						Optional<AnnotationExpr> putMapping = method.getAnnotationByName(  "PutMapping");
@@ -135,7 +137,7 @@ public class AnalyzerService implements CommandLineRunner {
 						patchMapping.isPresent() ? "PATCH" :
 						deleteMapping.isPresent() ? "DELETE" : "UNKNOWN";
 						if (getMapping.isPresent() || postMapping.isPresent() || putMapping.isPresent() ||
-						patchMapping.isPresent() || deleteMapping.isPresent()) {
+						patchMapping.isPresent() || deleteMapping.isPresent() || requestMapping.isPresent()) {
 							String path = getMapping.isPresent() ? 
 							getMapping.get().findAll(StringLiteralExpr.class)
 							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : postMapping.isPresent() ?
@@ -144,9 +146,38 @@ public class AnalyzerService implements CommandLineRunner {
 							putMapping.get().findAll(StringLiteralExpr.class)
 							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : patchMapping.isPresent() ?
 							patchMapping.get().findAll(StringLiteralExpr.class)
-							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : 
+							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : deleteMapping.isPresent() ?
 							deleteMapping.get().findAll(StringLiteralExpr.class)
-							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/"); 
+							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : "";
+
+							if (requestMapping.isPresent()) {
+								if (requestMapping.isPresent()) {
+                                                                    AnnotationExpr annotation = requestMapping.get();
+                                                                    if (annotation.isNormalAnnotationExpr()) {
+                                                                        NormalAnnotationExpr normalAnnotation = annotation.asNormalAnnotationExpr();
+                                                                        
+                                                                        for (MemberValuePair pair : normalAnnotation.getPairs()) {
+                                                                            String name = pair.getNameAsString();
+                                                                            Expression value = pair.getValue();
+                                                                            if (name.equals("value") || name.equals("path")) {
+                                                                                if (value.isStringLiteralExpr()) {
+                                                                                    path = value.asStringLiteralExpr().getValue();
+                                                                                }
+                                                                            } 
+                                                                            else if (name.equals("method")) {
+                                                                                httpMethod = value.toString(); // e.g., RequestMethod.POST
+                                                                            }
+                                                                        }
+                                                                    } 
+                                                                    
+                                                                    else if (annotation.isSingleMemberAnnotationExpr()) {
+                                                                        Expression value = annotation.asSingleMemberAnnotationExpr().getMemberValue();
+                                                                        if (value.isStringLiteralExpr()) {
+                                                                            path = value.asStringLiteralExpr().getValue();
+                                                                        }
+                                                                    }
+								}
+							}
 
 							Map<String, Object> inputDesc = new LinkedHashMap<>();
 							for (Parameter param: method.getParameters()) {
@@ -278,6 +309,11 @@ public class AnalyzerService implements CommandLineRunner {
                     throws IOException, InterruptedException {
                 
                 HttpClient client = HttpClient.newBuilder().build();
+		System.out.println("Sending post request: " +  data);
+
+		if (!serverUrl.equals("blank")){
+			return;
+		}
 
                 HttpRequest request = HttpRequest.newBuilder()
                         .uri(URI.create(serverUrl))
@@ -285,7 +321,6 @@ public class AnalyzerService implements CommandLineRunner {
                         .POST(HttpRequest.BodyPublishers.ofString(data)) 
                         .build();
         
-		System.out.println("Sending post request: " +  data);
                 HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         
                 System.out.println("✅ POST Request Sent Successfully");
