@@ -124,6 +124,27 @@ public class AnalyzerService implements CommandLineRunner {
 				cu.findAll(ClassOrInterfaceDeclaration.class).stream()
 					.filter( c -> c.isAnnotationPresent("RestController") || c.isAnnotationPresent("Controller"))
 					.forEach( controller -> {
+						Optional<AnnotationExpr> classMapping = controller.getAnnotationByName("RequestMapping");
+                                                if (classMapping.isEmpty()) {
+                                                    classMapping = controller.getAnnotationByName("RestController");
+                                                }
+                                                if (classMapping.isEmpty()) {
+                                                    classMapping = controller.getAnnotationByName("Controller");
+                                                }
+                                                
+						String classPath = "";
+                                                if (classMapping.isPresent()) {
+                                                    AnnotationExpr annotation = classMapping.get();
+                                                    
+                                                    if (annotation.isSingleMemberAnnotationExpr()) {
+                                                        Expression value = annotation.asSingleMemberAnnotationExpr().getMemberValue();
+                                                        if (value.isStringLiteralExpr()) {
+                                                            classPath = value.asStringLiteralExpr().getValue();
+                                                        }
+                                                    }
+                                                }
+
+						final String basePath  = classPath;
 						controller.findAll(MethodDeclaration.class).forEach( method -> {
 						Optional<AnnotationExpr> requestMapping = method.getAnnotationByName("RequestMapping");
 						Optional<AnnotationExpr> getMapping = method.getAnnotationByName("GetMapping");
@@ -138,7 +159,7 @@ public class AnalyzerService implements CommandLineRunner {
 						deleteMapping.isPresent() ? "DELETE" : "UNKNOWN";
 						if (getMapping.isPresent() || postMapping.isPresent() || putMapping.isPresent() ||
 						patchMapping.isPresent() || deleteMapping.isPresent() || requestMapping.isPresent()) {
-							String path = getMapping.isPresent() ? 
+							String path = basePath +  ( getMapping.isPresent() ? 
 							getMapping.get().findAll(StringLiteralExpr.class)
 							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : postMapping.isPresent() ?
 							postMapping.get().findAll(StringLiteralExpr.class)
@@ -148,7 +169,7 @@ public class AnalyzerService implements CommandLineRunner {
 							patchMapping.get().findAll(StringLiteralExpr.class)
 							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : deleteMapping.isPresent() ?
 							deleteMapping.get().findAll(StringLiteralExpr.class)
-							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : "";
+							.stream().findFirst().map(StringLiteralExpr::getValue).orElse("/") : "");
 
 							if (requestMapping.isPresent()) {
 								if (requestMapping.isPresent()) {
